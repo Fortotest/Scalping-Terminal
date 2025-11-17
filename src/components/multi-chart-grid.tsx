@@ -8,12 +8,10 @@ interface Props {
 
 export default function MultiChartGrid({ symbol }: Props) {
   const charts = [
-    { id: 'chart-d1', interval: 'D', label: 'D1' },
     { id: 'chart-h4', interval: '240', label: 'H4' },
     { id: 'chart-h1', interval: '60', label: 'H1' },
     { id: 'chart-m15', interval: '15', label: 'M15' },
     { id: 'chart-m5', interval: '5', label: 'M5' },
-    { id: 'chart-m1', interval: '1', label: 'M1' }
   ];
 
   return (
