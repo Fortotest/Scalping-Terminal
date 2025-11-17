@@ -37,7 +37,9 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "allow_symbol_change": true,
       "container_id": containerId,
       "hide_volume": true,
-      "studies": [],
+      "studies": [
+        "RSI@tv-basicstudies"
+      ],
       "backgroundColor": "rgba(255, 255, 255, 1)",
       "gridColor": "rgba(229, 231, 235, 1)"
     });
