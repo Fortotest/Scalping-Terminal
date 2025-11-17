@@ -7,7 +7,7 @@ export default function Home() {
   const symbol = "OANDA:XAUUSD";
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background p-4">
       <main className="flex-grow">
         <MultiChartGrid symbol={symbol} />
       </main>

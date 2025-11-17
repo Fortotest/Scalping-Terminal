@@ -6,9 +6,10 @@ interface TradingViewWidgetProps {
   symbol: string;
   interval: string;
   containerId: string;
+  theme?: 'light' | 'dark';
 }
 
-function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetProps) {
+function TradingViewWidget({ symbol, interval, containerId, theme = 'light' }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +30,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "symbol": symbol,
       "interval": interval,
       "timezone": "Etc/UTC",
-      "theme": "light",
+      "theme": theme,
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
@@ -50,7 +51,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
         container.current.innerHTML = '';
       }
     };
-  }, [symbol, interval, containerId]);
+  }, [symbol, interval, containerId, theme]);
 
   return (
     <div 
