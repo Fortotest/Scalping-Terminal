@@ -1,7 +1,6 @@
 'use client';
 
 import MultiChartGrid from '@/components/multi-chart-grid';
-import MarketAnalysisPanel from '@/components/market-analysis-panel';
 
 export default function Home() {
   // The default symbol can be changed here
@@ -12,9 +11,6 @@ export default function Home() {
       <main className="flex-grow">
         <MultiChartGrid symbol={symbol} />
       </main>
-      <div className="w-full">
-        <MarketAnalysisPanel />
-      </div>
     </div>
   );
 }
