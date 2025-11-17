@@ -29,7 +29,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "symbol": symbol,
       "interval": interval,
       "timezone": "Etc/UTC",
-      "theme": "dark",
+      "theme": "light",
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
@@ -40,8 +40,8 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
         "MASimple@tv-basicstudies",
         "RSI@tv-basicstudies"
       ],
-      "backgroundColor": "rgba(15, 23, 42, 1)", // bg-slate-950
-      "gridColor": "rgba(30, 41, 59, 1)" // border-slate-800
+      "backgroundColor": "rgba(250, 250, 250, 1)",
+      "gridColor": "rgba(229, 231, 235, 1)"
     });
     
     container.current.appendChild(script);
