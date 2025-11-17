@@ -36,6 +36,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "hide_side_toolbar": false,
       "allow_symbol_change": true,
       "container_id": containerId,
+      "hide_volume": true,
       "studies": [],
       "backgroundColor": "rgba(255, 255, 255, 1)",
       "gridColor": "rgba(229, 231, 235, 1)"
