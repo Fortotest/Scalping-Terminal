@@ -10,17 +10,6 @@ interface TradingViewWidgetProps {
 
 function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
-  const [theme, setTheme] = React.useState('light');
-
-  useEffect(() => {
-    // Detect system theme preference
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setTheme(mediaQuery.matches ? 'dark' : 'light');
-
-    const handler = (e: MediaQueryListEvent) => setTheme(e.matches ? 'dark' : 'light');
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
-  }, []);
 
   useEffect(() => {
     // Ensure this runs only on the client
@@ -40,7 +29,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "symbol": symbol,
       "interval": interval,
       "timezone": "Etc/UTC",
-      "theme": theme,
+      "theme": "light",
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
@@ -61,7 +50,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
         container.current.innerHTML = '';
       }
     };
-  }, [symbol, interval, containerId, theme]);
+  }, [symbol, interval, containerId]);
 
   return (
     <div 

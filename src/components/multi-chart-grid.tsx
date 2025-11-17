@@ -19,7 +19,7 @@ export default function MultiChartGrid({ symbol }: Props) {
       {charts.map((chart) => (
         <div
           key={chart.id}
-          className="bg-card rounded-lg overflow-hidden flex flex-col h-[45vh]"
+          className="bg-card rounded-lg overflow-hidden flex flex-col h-[45vh] border"
           style={{ minHeight: '400px' }}
         >
           <div className="flex-grow">
