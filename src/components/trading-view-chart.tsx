@@ -20,25 +20,27 @@ export default function TradingViewChart({ symbol, interval }: Props) {
     if (!chartContainerRef.current) return;
     
     const computedStyle = getComputedStyle(document.documentElement);
-    const textColor = computedStyle.getPropertyValue('--foreground').trim();
-    const borderColor = computedStyle.getPropertyValue('--border').trim();
+    // The getPropertyValue function returns the HSL values without the `hsl()` wrapper.
+    // The charting library requires the color in `rgba(r, g, b, a)` format.
+    const textColorHsl = computedStyle.getPropertyValue('--foreground').trim();
+    const borderColorHsl = computedStyle.getPropertyValue('--border').trim();
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: `hsl(${textColor})`,
+        textColor: `hsl(${textColorHsl})`,
       },
       grid: {
-        vertLines: { color: `hsl(${borderColor})` },
-        horzLines: { color: `hsl(${borderColor})` },
+        vertLines: { color: `hsl(${borderColorHsl})` },
+        horzLines: { color: `hsl(${borderColorHsl})` },
       },
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        borderColor: `hsl(${borderColor})`,
+        borderColor: `hsl(${borderColorHsl})`,
       },
       rightPriceScale: {
-        borderColor: `hsl(${borderColor})`,
+        borderColor: `hsl(${borderColorHsl})`,
       }
     });
 
@@ -119,7 +121,7 @@ export default function TradingViewChart({ symbol, interval }: Props) {
         try {
             const quote = await tvClient.getRealtimeQuote(symbol);
             if (seriesRef.current && quote) {
-                const data = seriesRef.current.data();
+                const data = await seriesRef.current.data();
                 const lastBar = data[data.length - 1];
                 if (lastBar) {
                     const newBar = {
