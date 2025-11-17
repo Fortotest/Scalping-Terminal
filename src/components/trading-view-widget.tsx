@@ -6,11 +6,21 @@ interface TradingViewWidgetProps {
   symbol: string;
   interval: string;
   containerId: string;
-  theme?: 'light' | 'dark';
 }
 
-function TradingViewWidget({ symbol, interval, containerId, theme = 'light' }: TradingViewWidgetProps) {
+function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
+  const [theme, setTheme] = React.useState('light');
+
+  useEffect(() => {
+    // Detect system theme preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme(mediaQuery.matches ? 'dark' : 'light');
+
+    const handler = (e: MediaQueryListEvent) => setTheme(e.matches ? 'dark' : 'light');
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     // Ensure this runs only on the client
