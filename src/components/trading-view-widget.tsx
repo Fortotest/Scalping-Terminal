@@ -39,7 +39,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "hide_volume": true,
       "studies": [],
       "withdateranges": false,
-      "hide_top_toolbar": true
+      "hide_top_toolbar": false
     });
     
     container.current.appendChild(script);
