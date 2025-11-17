@@ -21,7 +21,7 @@ export default function MultiChartGrid({ symbol }: Props) {
       {charts.map((chart) => (
         <div
           key={chart.id}
-          className="w-full sm:w-1/2 md:w-1/3 h-[50vh] border-t border-r border-border"
+          className="w-full md:w-1/2 h-[50vh] border-t border-r border-border"
           style={{ minHeight: '400px' }}
         >
           <TradingViewWidget
