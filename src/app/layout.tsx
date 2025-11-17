@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'ProTrade Terminal',
+  title: 'Scalping terminal',
   description: 'Professional-grade trading terminal using TradingView Official API',
 };
 
