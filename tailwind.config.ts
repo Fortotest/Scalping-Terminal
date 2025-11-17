@@ -65,6 +65,9 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        slate: {
+          950: '#0f172a',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

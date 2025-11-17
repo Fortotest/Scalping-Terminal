@@ -2,49 +2,71 @@
 
 import React, { useEffect, useRef, memo } from 'react';
 
-function TradingViewWidget({ symbol }: { symbol: string }) {
+interface TradingViewWidgetProps {
+  symbol: string;
+  interval: string;
+  containerId: string;
+}
+
+function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (container.current && symbol) {
-      // Clear the container before appending a new script
-      container.current.innerHTML = '';
-      
-      const script = document.createElement("script");
-      script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-      script.type = "text/javascript";
-      script.async = true;
-      script.innerHTML = `
-        {
-          "autosize": true,
-          "symbol": "${symbol}",
-          "interval": "D",
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
-          "locale": "en",
-          "enable_publishing": false,
-          "allow_symbol_change": true,
-          "container_id": "tradingview_widget_container"
-        }`;
-      
-      const widgetContainer = document.createElement('div');
-      widgetContainer.id = 'tradingview_widget_container';
-      widgetContainer.className = 'tradingview-widget-container__widget h-full';
+    // Ensure this runs only on the client
+    if (typeof window === 'undefined' || !container.current) {
+      return;
+    }
 
-      container.current.appendChild(widgetContainer);
-      container.current.appendChild(script);
+    // Clean up previous widget if symbol or interval changes
+    container.current.innerHTML = '';
+
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+    script.type = "text/javascript";
+    script.async = true;
+    script.innerHTML = JSON.stringify({
+      "autosize": true,
+      "symbol": symbol,
+      "interval": interval,
+      "timezone": "Etc/UTC",
+      "theme": "dark",
+      "style": "1",
+      "locale": "en",
+      "enable_publishing": false,
+      "hide_side_toolbar": true,
+      "allow_symbol_change": false,
+      "container_id": containerId,
+      "studies": [
+        "MASimple@tv-basicstudies",
+        "RSI@tv-basicstudies"
+      ],
+      "backgroundColor": "rgba(15, 23, 42, 1)", // bg-slate-950
+      "gridColor": "rgba(30, 41, 59, 1)" // border-slate-800
+    });
+    
+    container.current.appendChild(script);
+
+    // Add a unique ID to the inner div for the widget to target
+    const widgetWrapper = container.current.querySelector('.tradingview-widget-container__widget');
+    if (widgetWrapper) {
+      widgetWrapper.id = containerId;
     }
 
     return () => {
+      // Cleanup on component unmount
       if (container.current) {
         container.current.innerHTML = '';
       }
-    }
-  }, [symbol]);
+    };
+  }, [symbol, interval, containerId]);
 
   return (
-    <div className="tradingview-widget-container h-full" ref={container} style={{ height: "100%", width: "100%" }}>
+    <div 
+      id={containerId} 
+      className="tradingview-widget-container h-full w-full" 
+      ref={container}
+    >
+      <div className="tradingview-widget-container__widget h-full w-full"></div>
     </div>
   );
 }
