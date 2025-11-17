@@ -9,12 +9,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <main className="flex-grow flex flex-col">
-        <div className="flex-grow">
-          <MultiChartGrid symbol={symbol} />
-        </div>
-        <MarketAnalysisPanel />
+      <main className="flex-grow">
+        <MultiChartGrid symbol={symbol} />
       </main>
+      <MarketAnalysisPanel />
     </div>
   );
 }
