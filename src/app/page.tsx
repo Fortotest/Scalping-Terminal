@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from '@/components/header';
-import MultiChartGrid from '@/components/multi-chart-grid';
+import TradingViewWidget from '@/components/trading-view-widget';
 import RealtimePriceDisplay from '@/components/realtime-price-display';
 import SymbolSearchBar from '@/components/symbol-search-bar';
 import { getSymbolInformation, type SymbolInformationOutput } from '@/ai/flows/symbol-information-retrieval';
@@ -19,7 +19,10 @@ export default function Home() {
       if (!symbol) return;
       setIsLoading(true);
       try {
-        const info = await getSymbolInformation({ symbol });
+        // The getSymbolInformation flow needs to be updated to handle forex pairs like 'EURUSD'
+        // For now, we will handle the symbol format here.
+        const formattedSymbol = symbol.replace('/', '');
+        const info = await getSymbolInformation({ symbol: formattedSymbol });
         setSymbolInfo(info);
       } catch (error) {
         console.error("Failed to fetch symbol info:", error);
@@ -52,8 +55,8 @@ export default function Home() {
           </CardContent>
         </Card>
         
-        <div className="flex-grow">
-          {symbol && <MultiChartGrid key={symbol} symbol={symbol} />}
+        <div className="flex-grow h-[70vh]">
+          {symbol && <TradingViewWidget symbol={symbol} />}
         </div>
       </main>
     </div>
