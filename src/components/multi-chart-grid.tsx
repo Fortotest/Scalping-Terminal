@@ -8,10 +8,12 @@ interface Props {
 
 export default function MultiChartGrid({ symbol }: Props) {
   const charts = [
-    { id: 'top-left-chart', interval: '240', label: 'H4' },
-    { id: 'top-right-chart', interval: '60', label: 'H1' },
-    { id: 'bottom-left-chart', interval: '15', label: 'M15' },
-    { id: 'bottom-right-chart', interval: '5', label: 'M5' }
+    { id: 'chart-d1', interval: 'D', label: 'D1' },
+    { id: 'chart-h4', interval: '240', label: 'H4' },
+    { id: 'chart-h1', interval: '60', label: 'H1' },
+    { id: 'chart-m15', interval: '15', label: 'M15' },
+    { id: 'chart-m5', interval: '5', label: 'M5' },
+    { id: 'chart-m1', interval: '1', label: 'M1' }
   ];
 
   return (
@@ -19,7 +21,7 @@ export default function MultiChartGrid({ symbol }: Props) {
       {charts.map((chart) => (
         <div
           key={chart.id}
-          className="w-full md:w-1/2 h-[50vh] border-t border-border"
+          className="w-full sm:w-1/2 md:w-1/3 h-[50vh] border-t border-r border-border"
           style={{ minHeight: '400px' }}
         >
           <TradingViewWidget
