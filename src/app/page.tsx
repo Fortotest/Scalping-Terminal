@@ -8,11 +8,11 @@ export default function Home() {
   const symbol = "OANDA:XAUUSD";
 
   return (
-    <div className="relative min-h-screen bg-background">
-      <main className="h-screen pb-40">
+    <div className="flex flex-col min-h-screen bg-background">
+      <main className="flex-grow">
         <MultiChartGrid symbol={symbol} />
       </main>
-      <div className="absolute bottom-0 left-0 right-0">
+      <div className="w-full">
         <MarketAnalysisPanel />
       </div>
     </div>
