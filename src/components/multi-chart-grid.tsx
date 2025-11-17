@@ -15,7 +15,7 @@ export default function MultiChartGrid({ symbol }: Props) {
   ];
 
   return (
-    <div className="flex flex-wrap h-screen">
+    <div className="flex flex-wrap h-full">
       {charts.map((chart) => (
         <div
           key={chart.id}
