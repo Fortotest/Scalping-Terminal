@@ -38,17 +38,11 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "container_id": containerId,
       "hide_volume": true,
       "studies": [],
-      "backgroundColor": "rgba(255, 255, 255, 1)",
-      "gridColor": "rgba(229, 231, 235, 1)"
+      "withdateranges": false,
+      "hide_top_toolbar": true
     });
     
     container.current.appendChild(script);
-
-    // Add a unique ID to the inner div for the widget to target
-    const widgetWrapper = container.current.querySelector('.tradingview-widget-container__widget');
-    if (widgetWrapper) {
-      widgetWrapper.id = containerId;
-    }
 
     return () => {
       // Cleanup on component unmount
