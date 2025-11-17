@@ -18,23 +18,27 @@ export default function TradingViewChart({ symbol, interval }: Props) {
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
+    
+    const computedStyle = getComputedStyle(document.documentElement);
+    const textColor = computedStyle.getPropertyValue('--foreground').trim();
+    const borderColor = computedStyle.getPropertyValue('--border').trim();
 
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: 'hsl(var(--muted-foreground))',
+        textColor: `hsl(${textColor})`,
       },
       grid: {
-        vertLines: { color: 'hsl(var(--border))' },
-        horzLines: { color: 'hsl(var(--border))' },
+        vertLines: { color: `hsl(${borderColor})` },
+        horzLines: { color: `hsl(${borderColor})` },
       },
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
-        borderColor: 'hsl(var(--border))',
+        borderColor: `hsl(${borderColor})`,
       },
       rightPriceScale: {
-        borderColor: 'hsl(var(--border))',
+        borderColor: `hsl(${borderColor})`,
       }
     });
 
@@ -115,7 +119,8 @@ export default function TradingViewChart({ symbol, interval }: Props) {
         try {
             const quote = await tvClient.getRealtimeQuote(symbol);
             if (seriesRef.current && quote) {
-                const lastBar = await seriesRef.current.dataByIndex(seriesRef.current.data().size - 1);
+                const data = seriesRef.current.data();
+                const lastBar = data[data.length - 1];
                 if (lastBar) {
                     const newBar = {
                         ...lastBar,
