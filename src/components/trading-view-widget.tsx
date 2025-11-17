@@ -33,14 +33,11 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
-      "hide_side_toolbar": true,
-      "allow_symbol_change": false,
+      "hide_side_toolbar": false,
+      "allow_symbol_change": true,
       "container_id": containerId,
-      "studies": [
-        "MASimple@tv-basicstudies",
-        "RSI@tv-basicstudies"
-      ],
-      "backgroundColor": "rgba(250, 250, 250, 1)",
+      "studies": [],
+      "backgroundColor": "rgba(255, 255, 255, 1)",
       "gridColor": "rgba(229, 231, 235, 1)"
     });
     
