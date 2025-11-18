@@ -6,7 +6,7 @@ interface TradingViewWidgetProps {
   symbol: string;
   interval: string;
   containerId: string;
-  onSymbolChange?: (symbol: string) => void;
+  onSymbolChange: (symbol: string) => void;
 }
 
 function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: TradingViewWidgetProps) {
@@ -18,8 +18,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
       if (!container.current || widgetRef.current || typeof (window as any).TradingView === 'undefined') {
         return;
       }
-
-      // Clear the container before creating a new widget
+      
       container.current.innerHTML = '';
 
       const widgetOptions = {
@@ -38,7 +37,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
         hide_top_toolbar: false,
         save_image: false,
         container_id: containerId,
-        studies: [],
+        studies: [], // Ensure no default studies are loaded
         overrides: {
             "paneProperties.legendProperties.showLegend": true,
             "paneProperties.legendProperties.showStudyArguments": true,
@@ -46,7 +45,9 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             "paneProperties.legendProperties.showStudyValues": true,
             "paneProperties.legendProperties.showSeriesTitle": true,
             "paneProperties.legendProperties.showSeriesOHLC": true,
-            "mainSeriesProperties.style": 1, // Candles
+            "mainSeriesProperties.style": 1,
+            "mainSeriesProperties.showPriceLine": false, // From previous request
+            "volumePaneSize": "tiny", // Hide volume pane
         },
         onChartReady: () => {
             const widget = widgetRef.current;
@@ -63,28 +64,27 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
       const widget = new (window as any).TradingView.widget(widgetOptions);
       widgetRef.current = widget;
     };
-    
-    const scriptId = 'tradingview-widget-script-advanced';
-    if (!document.getElementById(scriptId)) {
-      const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = "https://s3.tradingview.com/tv.js";
-      script.type = "text/javascript";
-      script.async = true;
-      script.onload = createWidget; // Create widget after script is loaded
-      document.head.appendChild(script);
-    } else {
-      // If script is already there but window.TradingView might not be ready, wait for it.
-      const checkTV = setInterval(() => {
-        if ((window as any).TradingView) {
-          clearInterval(checkTV);
-          createWidget();
+
+    const initialize = () => {
+        if (typeof (window as any).TradingView !== 'undefined') {
+            createWidget();
+        } else {
+            const scriptId = 'tradingview-widget-script-advanced';
+            if (!document.getElementById(scriptId)) {
+                const script = document.createElement("script");
+                script.id = scriptId;
+                script.src = "https://s3.tradingview.com/tv.js";
+                script.type = "text/javascript";
+                script.async = true;
+                script.onload = createWidget;
+                document.head.appendChild(script);
+            }
         }
-      }, 100);
-    }
+    };
+    
+    initialize();
 
     return () => {
-      // Cleanup widget on component unmount
       if (widgetRef.current && widgetRef.current.remove) {
         try {
           widgetRef.current.remove();
@@ -94,11 +94,10 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
         widgetRef.current = null;
       }
     };
-  }, [containerId, interval, onSymbolChange, symbol]);
+  }, [symbol, interval, containerId, onSymbolChange]);
 
-  // Use a key to ensure React re-creates the component on symbol change
   return (
-    <div key={containerId} className="tradingview-widget-container h-full w-full">
+    <div className="tradingview-widget-container h-full w-full">
       <div id={containerId} ref={container} className="h-full w-full" />
     </div>
   );
