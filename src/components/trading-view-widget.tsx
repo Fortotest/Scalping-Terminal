@@ -49,28 +49,27 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             "paneProperties.legendProperties.showSeriesOHLC": true,
             "mainSeriesProperties.style": 1,
             "mainSeriesProperties.showPriceLine": false,
-            // --- START OF FIX ---
-            // This explicitly targets the default Volume study and removes it.
             "volumePaneSize": "hidden",
             "study.volume.visible": false,
             "study.vol.visible": false,
             "mainSeriesProperties.showVolume": false
-            // --- END OF FIX ---
           },
+          // --- START OF FIX ---
+          // onChartReady is a callback property within the widget options
+          onChartReady: () => {
+            if (widgetRef.current) {
+              widgetRef.current.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+                if (onSymbolChange && newSymbol.ticker && newSymbol.ticker.toUpperCase() !== symbol.toUpperCase()) {
+                  onSymbolChange(newSymbol.ticker);
+                }
+              });
+            }
+          },
+          // --- END OF FIX ---
         };
 
         const widget = new (window as any).TradingView.widget(widgetOptions);
         widgetRef.current = widget;
-
-        widget.onChartReady(() => {
-          if (widgetRef.current) {
-            widgetRef.current.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-              if (onSymbolChange && newSymbol.ticker && newSymbol.ticker.toUpperCase() !== symbol.toUpperCase()) {
-                onSymbolChange(newSymbol.ticker);
-              }
-            });
-          }
-        });
       }
     };
 
