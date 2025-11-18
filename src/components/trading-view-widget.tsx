@@ -26,12 +26,12 @@ interface TradingViewWidgetProps {
 
 function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: TradingViewWidgetProps) {
   const widgetRef = useRef<any>(null);
+  const isWidgetCreated = useRef(false);
 
   // This effect handles the creation and removal of the widget.
   useEffect(() => {
     const createWidget = () => {
-      // Ensure the container exists and we haven't created a widget in this specific component instance yet.
-      if (document.getElementById(containerId) && !widgetRef.current) {
+      if (document.getElementById(containerId) && !isWidgetCreated.current && 'TradingView' in window) {
         
         const widgetOptions = {
           autosize: true,
@@ -59,8 +59,9 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             "paneProperties.legendProperties.showSeriesOHLC": true,
             "mainSeriesProperties.style": 1,
             "mainSeriesProperties.showPriceLine": false,
-            // Hide volume by default by setting its pane size to a very small value
-             "volumePaneSize": "tiny", 
+            // Hide the volume indicator completely
+            "mainSeriesProperties.showVolume": false,
+            "volumePaneSize": "hidden",
           },
           onChartReady: () => {
             const widget = widgetRef.current;
@@ -77,12 +78,15 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
 
         const widget = new (window as any).TradingView.widget(widgetOptions);
         widgetRef.current = widget;
+        isWidgetCreated.current = true;
       }
     };
 
     // Load the script and then create the widget.
     loadTradingViewScript.then(() => {
-      createWidget();
+      if (!isWidgetCreated.current) {
+        createWidget();
+      }
     });
 
     // Cleanup function to remove the widget when the component unmounts.
@@ -94,14 +98,14 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           console.error("Error removing widget:", e);
         }
         widgetRef.current = null;
+        isWidgetCreated.current = false;
       }
     };
-    // The dependency array ensures this effect runs once per component instance.
   }, [containerId, onSymbolChange, symbol, interval]); 
 
   // This separate effect handles symbol changes on an already created widget.
   useEffect(() => {
-    if (widgetRef.current && widgetRef.current.chart) {
+    if (widgetRef.current && widgetRef.current.chart && isWidgetCreated.current) {
         widgetRef.current.chart().setSymbol(symbol, () => {
             // Optional callback after symbol is set
         });
@@ -110,7 +114,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
 
   // This separate effect handles interval changes on an already created widget.
   useEffect(() => {
-    if (widgetRef.current && widgetRef.current.chart) {
+    if (widgetRef.current && widgetRef.current.chart && isWidgetCreated.current) {
         widgetRef.current.chart().setResolution(interval, () => {
             // Optional callback after interval is set
         });
