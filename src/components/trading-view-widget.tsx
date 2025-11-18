@@ -33,41 +33,47 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           show_volume: false,
           hide_legend: false,
           container_id: containerId,
-          // The 'studies' array can be used to add indicators by default
           studies: [],
-          // These features can be adjusted to show/hide UI elements
           disabled_features: ["use_localstorage_for_settings"],
           enabled_features: ["study_templates"],
-          // onChartReady is the correct callback to use
-          onChartReady: function() {
+          onChartReady: () => {
             const widget = widgetRef.current;
             if (widget && onSymbolChange) {
-              widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-                if (newSymbol.ticker && newSymbol.ticker !== symbol) {
-                  onSymbolChange(newSymbol.ticker);
-                }
-              });
+                // The documentation is not clear on the type, so we need to be defensive
+                const chart = widget.chart ? widget.chart() : widget;
+                chart.onSymbolChanged().subscribe(null, (newSymbol: { name: string }) => {
+                    const newTicker = newSymbol.name;
+                    if (newTicker && newTicker !== symbol) {
+                        onSymbolChange(newTicker);
+                    }
+                });
             }
           },
         };
 
-        // Create the widget
         const widget = new (window as any).TradingView.widget(widgetOptions);
         widgetRef.current = widget;
-
       }
     };
     
-    // If the widget script is already loaded, create the widget
+    const initialize = () => {
+        if (widgetRef.current) {
+            try {
+                widgetRef.current.setSymbol(symbol, interval, () => {});
+            } catch (error) {
+                console.error('Error setting symbol, re-creating widget:', error);
+                widgetRef.current.remove();
+                widgetRef.current = null;
+                createWidget();
+            }
+        } else {
+            createWidget();
+        }
+    };
+    
     if (document.getElementById('tradingview-widget-script-advanced')) {
-      // If widget already exists, just update the symbol
-      if (widgetRef.current && widgetRef.current.setSymbol) {
-        widgetRef.current.setSymbol(symbol, interval, () => {});
-      } else {
-        createWidget();
-      }
+        initialize();
     } else {
-      // Otherwise, load the script and then create the widget
       const script = document.createElement("script");
       script.id = 'tradingview-widget-script-advanced';
       script.src = "https://s3.tradingview.com/tv.js";
