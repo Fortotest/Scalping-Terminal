@@ -45,7 +45,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           enable_publishing: false,
           hide_side_toolbar: false,
           allow_symbol_change: true,
-          withdateranges: true,
+          withdateranges: false,
           hide_top_toolbar: false,
           save_image: false,
           container_id: containerId,
