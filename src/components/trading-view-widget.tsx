@@ -33,7 +33,8 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
-      "allow_symbol_change": true,
+      "hide_top_toolbar": true,
+      "allow_symbol_change": false,
       "container_id": containerId,
     });
     
