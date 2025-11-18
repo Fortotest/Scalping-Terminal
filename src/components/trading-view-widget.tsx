@@ -33,13 +33,13 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
-      "hide_side_toolbar": false,
-      "allow_symbol_change": true,
+      "hide_side_toolbar": true,
+      "hide_top_toolbar": true,
+      "allow_symbol_change": false,
       "container_id": containerId,
       "hide_volume": true,
       "studies": [],
-      "withdateranges": false,
-      "hide_top_toolbar": false
+      "withdateranges": false
     });
     
     container.current.appendChild(script);
