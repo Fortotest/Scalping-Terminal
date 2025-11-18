@@ -38,6 +38,7 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "hide_legend": true,
       "studies": [],
       "container_id": containerId,
+      "show_volume": false
     });
     
     container.current.appendChild(script);
