@@ -15,15 +15,14 @@ export default function MultiChartGrid({ symbol }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[90vh] flex-grow">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 h-[calc(100vh-1rem)] flex-grow">
       {charts.map((chart) => (
-        <div key={chart.id} className="h-full w-full">
           <TradingViewWidget
+            key={chart.id}
             symbol={symbol}
             interval={chart.interval}
             containerId={chart.id}
           />
-        </div>
       ))}
     </div>
   );
