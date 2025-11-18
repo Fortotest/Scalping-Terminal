@@ -16,7 +16,7 @@ export default function MultiChartGrid({ symbol, onSymbolChange }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-1 h-[calc(100vh-1rem)] flex-grow">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 h-[calc(100vh-1rem)] flex-grow">
       {charts.map((chart) => (
           <TradingViewWidget
             key={chart.id}

@@ -15,72 +15,91 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
 
   useEffect(() => {
     // Ensure this runs only on the client
-    if (typeof window === 'undefined' || !container.current) {
+    if (typeof window === 'undefined' || !container.current || !(window as any).TradingView) {
       return;
     }
 
     const createWidget = () => {
+      if (!container.current) return;
+
       // Clear the container before creating a new widget
-      if (container.current) {
-        container.current.innerHTML = '';
-      }
-      
-      if ('TradingView' in window && (window as any).TradingView.widget) {
-        const widgetOptions = {
-          autosize: true,
-          symbol: symbol,
-          interval: interval,
-          timezone: "Etc/UTC",
-          theme: "light",
-          style: "1",
-          locale: "en",
-          enable_publishing: false,
-          hide_side_toolbar: false,
-          allow_symbol_change: true,
-          withdateranges: true,
-          hide_top_toolbar: false,
-          save_image: false,
-          container_id: containerId,
-          show_volume: false,
-          onChartReady: () => {
-            const widget = widgetRef.current;
-            if (widget) {
-              widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-                if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
-                  onSymbolChange(newSymbol.ticker);
-                }
-              });
-            }
-          },
-        };
+      container.current.innerHTML = '';
 
-        const widget = new (window as any).TradingView.widget(widgetOptions);
-        widgetRef.current = widget;
-      }
+      const widgetOptions = {
+        autosize: true,
+        symbol: symbol,
+        interval: interval,
+        timezone: "Etc/UTC",
+        theme: "light",
+        style: "1",
+        locale: "en",
+        enable_publishing: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: true,
+        withdateranges: true,
+        hide_top_toolbar: false,
+        save_image: false,
+        container_id: containerId,
+        studies_overrides: {
+          "volume.volume.plottype": "line",
+          "volume.volume.color.0": "#000000",
+          "volume.volume.color.1": "#000000",
+          "volume.volume.transparency": 100,
+          "volume.options.showStudyArguments": false,
+          "volume.options.showStudyTitles": false,
+          "volume.options.showStudyValues": false,
+          "volume.options.showMA": false,
+        },
+        overrides: {
+            "paneProperties.legendProperties.showLegend": true,
+            "paneProperties.legendProperties.showStudyArguments": true,
+            "paneProperties.legendProperties.showStudyTitles": true,
+            "paneProperties.legendProperties.showStudyValues": true,
+            "paneProperties.legendProperties.showSeriesTitle": true,
+            "paneProperties.legendProperties.showSeriesOHLC": true,
+            "mainSeriesProperties.style": 1 // Candles
+        },
+        studies: [
+          // Remove default volume study
+        ],
+        onChartReady: () => {
+          const widget = widgetRef.current;
+          if (widget) {
+            widget.activeChart().createStudy('Volume', false, false, {}, () => {}, {
+              "volume.volume.color.0": "rgba(255, 0, 0, 0.0)",
+              "volume.volume.color.1": "rgba(0, 255, 0, 0.0)",
+              "volume.volume.plottype": "columns",
+              "volume.maLength": 20,
+              "volume.showma": false,
+              "volume.volume ma.color": "rgba(0, 0, 0, 0)",
+              "volume.volume ma.plottype": "line",
+              "volume.volume ma.linewidth": 1,
+            });
+
+            widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+              if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
+                onSymbolChange(newSymbol.ticker);
+              }
+            });
+          }
+        },
+      };
+
+      const widget = new (window as any).TradingView.widget(widgetOptions);
+      widgetRef.current = widget;
     };
+    
+    const scriptId = 'tradingview-widget-script-advanced';
 
-    const initialize = () => {
-      // If widget already exists for the current symbol, don't re-create
-      if (widgetRef.current && widgetRef.current.symbol() === symbol) {
-        return;
-      }
-      // If widget exists but symbol is different, update it
-      if (widgetRef.current) {
-        widgetRef.current.setSymbol(symbol, interval, () => {});
-      } else {
-        createWidget();
-      }
-    };
-
-    if (document.querySelector('#tradingview-widget-script-advanced')) {
-      initialize();
+    if (document.getElementById(scriptId) && (window as any).TradingView) {
+      createWidget();
     } else {
       const script = document.createElement("script");
-      script.id = 'tradingview-widget-script-advanced';
+      script.id = scriptId;
       script.src = "https://s3.tradingview.com/tv.js";
       script.type = "text/javascript";
       script.async = true;
-      script.onload = initialize;
+      script.onload = createWidget;
       document.head.appendChild(script);
     }
 
@@ -88,7 +107,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
 
   // Use a key related to the symbol to force re-mount on symbol change if needed
   return (
-    <div key={symbol} className="tradingview-widget-container h-full w-full">
+    <div key={symbol + containerId} className="tradingview-widget-container h-full w-full">
       <div id={containerId} ref={container} className="h-full w-full" />
     </div>
   );
