@@ -38,9 +38,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
         hide_top_toolbar: false,
         save_image: false,
         container_id: containerId,
-        studies_overrides: {
-          "volume.volume.plottype": "line",
-        },
+        studies: [],
         overrides: {
             "paneProperties.legendProperties.showLegend": true,
             "paneProperties.legendProperties.showStudyArguments": true,
@@ -48,12 +46,9 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             "paneProperties.legendProperties.showStudyValues": true,
             "paneProperties.legendProperties.showSeriesTitle": true,
             "paneProperties.legendProperties.showSeriesOHLC": true,
-            "mainSeriesProperties.style": 1, // Candles,
-            "volume.volume.color.0": "rgba(255, 0, 0, 0.0)",
-            "volume.volume.color.1": "rgba(0, 255, 0, 0.0)",
+            "mainSeriesProperties.style": 1, // Candles
         },
-        studies: [], // Remove default volume
-        onChartReady: function() {
+        onChartReady: () => {
             const widget = widgetRef.current;
             if (widget) {
                 widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
@@ -99,11 +94,11 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
         widgetRef.current = null;
       }
     };
-  }, [symbol, interval, containerId, onSymbolChange]);
+  }, [containerId, interval, onSymbolChange, symbol]);
 
   // Use a key to ensure React re-creates the component on symbol change
   return (
-    <div key={symbol + containerId} className="tradingview-widget-container h-full w-full">
+    <div key={containerId} className="tradingview-widget-container h-full w-full">
       <div id={containerId} ref={container} className="h-full w-full" />
     </div>
   );
