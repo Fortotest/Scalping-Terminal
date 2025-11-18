@@ -14,9 +14,18 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
   const widgetRef = useRef<any>(null);
 
   useEffect(() => {
+    // Ensure this runs only on the client
+    if (typeof window === 'undefined' || !container.current) {
+      return;
+    }
+
     const createWidget = () => {
-      if (typeof window !== 'undefined' && 'TradingView' in window && container.current) {
-        
+      // Clear the container before creating a new widget
+      if (container.current) {
+        container.current.innerHTML = '';
+      }
+      
+      if ('TradingView' in window && (window as any).TradingView.widget) {
         const widgetOptions = {
           autosize: true,
           symbol: symbol,
@@ -25,7 +34,6 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           theme: "light",
           style: "1",
           locale: "en",
-          toolbar_bg: "#f1f3f6",
           enable_publishing: false,
           hide_side_toolbar: false,
           allow_symbol_change: true,
@@ -35,11 +43,12 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           container_id: containerId,
           show_volume: false,
           onChartReady: () => {
-            if (widgetRef.current) {
-              widgetRef.current.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-                  if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
-                      onSymbolChange(newSymbol.ticker);
-                  }
+            const widget = widgetRef.current;
+            if (widget) {
+              widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+                if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
+                  onSymbolChange(newSymbol.ticker);
+                }
               });
             }
           },
@@ -49,28 +58,22 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
         widgetRef.current = widget;
       }
     };
-    
+
     const initialize = () => {
-      if (document.getElementById(containerId)?.childElementCount === 0) {
-        createWidget();
-      } else if (widgetRef.current) {
-          try {
-              widgetRef.current.setSymbol(symbol, interval, () => {});
-          } catch (error) {
-              console.error('Error setting symbol, re-creating widget:', error);
-              if (widgetRef.current.remove) {
-                widgetRef.current.remove();
-              }
-              widgetRef.current = null;
-              createWidget();
-          }
+      // If widget already exists for the current symbol, don't re-create
+      if (widgetRef.current && widgetRef.current.symbol() === symbol) {
+        return;
+      }
+      // If widget exists but symbol is different, update it
+      if (widgetRef.current) {
+        widgetRef.current.setSymbol(symbol, interval, () => {});
       } else {
         createWidget();
       }
     };
-    
-    if (document.getElementById('tradingview-widget-script-advanced')) {
-        initialize();
+
+    if (document.querySelector('#tradingview-widget-script-advanced')) {
+      initialize();
     } else {
       const script = document.createElement("script");
       script.id = 'tradingview-widget-script-advanced';
@@ -80,26 +83,13 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
       script.onload = initialize;
       document.head.appendChild(script);
     }
-    
-    return () => {
-      if (widgetRef.current && typeof widgetRef.current.remove === 'function') {
-        try {
-          widgetRef.current.remove();
-          widgetRef.current = null;
-        } catch (error) {
-          console.error('Error removing widget on cleanup:', error);
-        }
-      }
-    };
+
   }, [symbol, interval, containerId, onSymbolChange]);
 
+  // Use a key related to the symbol to force re-mount on symbol change if needed
   return (
-    <div
-      id={containerId}
-      className="tradingview-widget-container h-full w-full"
-      ref={container}
-    >
-      <div className="tradingview-widget-container__widget h-full w-full"></div>
+    <div key={symbol} className="tradingview-widget-container h-full w-full">
+      <div id={containerId} ref={container} className="h-full w-full" />
     </div>
   );
 }
