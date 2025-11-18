@@ -1,7 +1,5 @@
 'use client';
 
-import MultiChartGrid from '@/components/multi-chart-grid';
-
 export default function Home() {
   // The default symbol can be changed here
   const symbol = "OANDA:XAUUSD";
@@ -9,7 +7,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background p-2">
       <main className="flex-grow">
-        <MultiChartGrid symbol={symbol} />
+        {/* The chart grid has been removed as requested. */}
       </main>
     </div>
   );
