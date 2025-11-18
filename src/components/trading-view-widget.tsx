@@ -34,18 +34,49 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "locale": "en",
       "enable_publishing": false,
       "hide_top_toolbar": false,
-      "hide_legend": false,
-      "allow_symbol_change": false,
+      "hide_side_toolbar": false,
+      "hide_volume": true,
+      "hideideas": true,
+      "studies_overrides": {
+        "volume.volume.plottype": "line"
+      },
+      "studies": [],
       "container_id": containerId,
     });
     
     container.current.appendChild(script);
+
+    // After the script is appended, we need to wait for the iframe to be created
+    // and then send a message to it to apply the status line settings.
+    const iframeWatcher = setInterval(() => {
+      const iframe = container.current?.querySelector('iframe');
+      if (iframe && iframe.contentWindow) {
+        clearInterval(iframeWatcher);
+        
+        const applySettings = () => {
+          // These settings correspond to the checkboxes in your image
+          iframe.contentWindow?.postMessage({
+            type: 'set-widget-properties',
+            properties: {
+              "paneProperties.legendProperties.showVolume": false,
+              "paneProperties.legendProperties.showLastDayChange": false,
+            }
+          }, '*');
+        };
+
+        // The widget might take some time to initialize fully.
+        // We'll try to send the message a few times to make sure it's received.
+        setTimeout(applySettings, 1000);
+        setTimeout(applySettings, 3000); // Failsafe
+      }
+    }, 100);
 
     return () => {
       // Cleanup on component unmount
       if (container.current) {
         container.current.innerHTML = '';
       }
+      clearInterval(iframeWatcher);
     };
   }, [symbol, interval, containerId]);
 
