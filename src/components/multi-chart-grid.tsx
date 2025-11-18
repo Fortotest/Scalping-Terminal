@@ -15,20 +15,14 @@ export default function MultiChartGrid({ symbol }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full flex-grow">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[90vh] flex-grow">
       {charts.map((chart) => (
-        <div
-          key={chart.id}
-          className="bg-card rounded-lg overflow-hidden flex flex-col h-[45vh] border"
-          style={{ minHeight: '400px' }}
-        >
-          <div className="flex-grow">
-            <TradingViewWidget
-              symbol={symbol}
-              interval={chart.interval}
-              containerId={chart.id}
-            />
-          </div>
+        <div key={chart.id} className="h-full w-full">
+          <TradingViewWidget
+            symbol={symbol}
+            interval={chart.interval}
+            containerId={chart.id}
+          />
         </div>
       ))}
     </div>
