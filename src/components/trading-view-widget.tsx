@@ -44,7 +44,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
       "withdateranges": true,
       "hide_side_toolbar": false,
       "hide_top_toolbar": false,
-      "hide_legend": true,
+      "hide_legend": false,
       "save_image": false,
       "show_volume": false,
       "container_id": containerId,
@@ -82,7 +82,11 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
     
     return () => {
         if (widgetRef.current) {
-            widgetRef.current.remove();
+            try {
+              widgetRef.current.remove();
+            } catch (error) {
+              console.error('Error removing widget:', error);
+            }
             widgetRef.current = null;
         }
     }
