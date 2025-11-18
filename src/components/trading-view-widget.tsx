@@ -2,21 +2,6 @@
 
 import React, { useEffect, useRef, memo } from 'react';
 
-// A global promise to ensure the TradingView script is loaded only once.
-const loadTradingViewScript = new Promise<void>((resolve) => {
-  if (typeof window !== 'undefined' && (window as any).TradingView) {
-    resolve();
-    return;
-  }
-  const script = document.createElement('script');
-  script.id = 'tradingview-widget-script';
-  script.src = 'https://s3.tradingview.com/tv.js';
-  script.async = true;
-  script.onload = () => resolve();
-  document.head.appendChild(script);
-});
-
-
 interface TradingViewWidgetProps {
   symbol: string;
   interval: string;
@@ -25,21 +10,19 @@ interface TradingViewWidgetProps {
 }
 
 function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: TradingViewWidgetProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetRef = useRef<any>(null);
-  // Use a ref to track if the widget has been created for this specific instance.
-  const isWidgetCreated = useRef(false);
 
   useEffect(() => {
-    // Only run this effect once per component instance.
-    if (isWidgetCreated.current) {
-        return;
-    }
-
-    let widget: any;
+    if (!containerRef.current) return;
 
     const createWidget = () => {
-      if (document.getElementById(containerId) && 'TradingView' in window && (window as any).TradingView.widget) {
-        
+      if (typeof window !== 'undefined' && (window as any).TradingView && containerRef.current) {
+        if (widgetRef.current) {
+            widgetRef.current.remove();
+            widgetRef.current = null;
+        }
+
         const widgetOptions = {
           autosize: true,
           symbol: symbol,
@@ -52,12 +35,12 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           enable_publishing: false,
           hide_side_toolbar: false,
           allow_symbol_change: true,
+          container_id: containerId,
           withdateranges: false,
           hide_top_toolbar: false,
           save_image: false,
-          container_id: containerId,
           studies: [],
-           overrides: {
+          overrides: {
             "paneProperties.legendProperties.showLegend": true,
             "paneProperties.legendProperties.showStudyArguments": true,
             "paneProperties.legendProperties.showStudyTitles": true,
@@ -66,67 +49,72 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             "paneProperties.legendProperties.showSeriesOHLC": true,
             "mainSeriesProperties.style": 1,
             "mainSeriesProperties.showPriceLine": false,
-            // Hide the volume indicator completely
-            "mainSeriesProperties.showVolume": false,
+            // --- START OF FIX ---
+            // This explicitly targets the default Volume study and removes it.
             "volumePaneSize": "hidden",
+            "study.volume.visible": false,
+            "study.vol.visible": false,
+            "mainSeriesProperties.showVolume": false
+            // --- END OF FIX ---
           },
         };
 
-        widget = new (window as any).TradingView.widget(widgetOptions);
+        const widget = new (window as any).TradingView.widget(widgetOptions);
         widgetRef.current = widget;
-        isWidgetCreated.current = true; // Mark as created.
 
         widget.onChartReady(() => {
-            if (widgetRef.current) {
-                // Subscribe to symbol changes
-                widgetRef.current.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-                  if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
-                    onSymbolChange(newSymbol.ticker);
-                  }
-                });
-            }
+          if (widgetRef.current) {
+            widgetRef.current.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+              if (onSymbolChange && newSymbol.ticker && newSymbol.ticker.toUpperCase() !== symbol.toUpperCase()) {
+                onSymbolChange(newSymbol.ticker);
+              }
+            });
+          }
         });
       }
     };
 
-    loadTradingViewScript.then(() => {
-        createWidget();
-    });
+    const loadScript = () => {
+        const scriptId = 'tradingview-widget-script';
+        if (document.getElementById(scriptId)) {
+            if (typeof (window as any).TradingView !== 'undefined') {
+                createWidget();
+            }
+            return;
+        }
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.src = 'https://s3.tradingview.com/tv.js';
+        script.async = true;
+        script.onload = createWidget;
+        document.head.appendChild(script);
+    };
 
-    // Cleanup function
+    loadScript();
+
     return () => {
       if (widgetRef.current && typeof widgetRef.current.remove === 'function') {
         widgetRef.current.remove();
         widgetRef.current = null;
       }
-      isWidgetCreated.current = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerId]); // This effect should only run once when the containerId is stable.
+  }, [containerId, onSymbolChange, symbol, interval]); // Dependencies that trigger re-creation
 
-  // This separate effect handles symbol changes on an already created widget.
   useEffect(() => {
-    // Ensure the widget is created before trying to change the symbol.
-    if (widgetRef.current && widgetRef.current.chart && isWidgetCreated.current) {
-      widgetRef.current.chart().setSymbol(symbol, () => {
-          // Optional callback after symbol is set
-      });
+    if (widgetRef.current && widgetRef.current.chart && typeof widgetRef.current.chart === 'function') {
+        widgetRef.current.chart().setSymbol(symbol, () => {});
     }
   }, [symbol]);
 
-  // This separate effect handles interval changes on an already created widget.
   useEffect(() => {
-    // Ensure the widget is created before trying to change the interval.
-    if (widgetRef.current && widgetRef.current.chart && isWidgetCreated.current) {
-      widgetRef.current.chart().setResolution(interval, () => {
-          // Optional callback after interval is set
-      });
+    if (widgetRef.current && widgetRef.current.chart && typeof widgetRef.current.chart === 'function') {
+        widgetRef.current.chart().setResolution(interval, () => {});
     }
   }, [interval]);
 
   return (
     <div className="tradingview-widget-container h-full w-full border border-gray-200 rounded-md overflow-hidden">
-      <div id={containerId} className="h-full w-full" />
+      <div id={containerId} ref={containerRef} className="h-full w-full" />
     </div>
   );
 }
