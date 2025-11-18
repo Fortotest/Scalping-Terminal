@@ -14,67 +14,60 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
   const widgetRef = useRef<any>(null);
 
   useEffect(() => {
-    // Ensure this runs only on the client
-    if (typeof window === 'undefined' || !container.current) {
-      return;
-    }
-
     const createWidget = () => {
-      if ('TradingView' in window && container.current && (window.TradingView as any).widget) {
-        // Clean up previous widget if it exists
-        if (widgetRef.current) {
-          try {
-            widgetRef.current.remove();
-          } catch (error) {
-            console.error('Error removing old widget:', error);
-          }
-          widgetRef.current = null;
-        }
+      if (typeof window !== 'undefined' && 'TradingView' in window && container.current) {
         
         const widgetOptions = {
-          "autosize": true,
-          "symbol": symbol,
-          "interval": interval,
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
-          "locale": "en",
-          "enable_publishing": false,
-          "withdateranges": true,
-          "hide_side_toolbar": false,
-          "hide_top_toolbar": false,
-          "save_image": false,
-          "show_volume": false,
-          "hide_legend": false,
-          "container_id": containerId,
-          "studies": [],
-          "disabled_features": ["use_localstorage_for_settings"],
-          "enabled_features": ["study_templates"],
-          "onChartReady": (widget: any) => {
-            widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-              if (onSymbolChange && newSymbol.ticker) {
-                onSymbolChange(newSymbol.ticker);
-              }
-            });
+          autosize: true,
+          symbol: symbol,
+          interval: interval,
+          timezone: "Etc/UTC",
+          theme: "dark",
+          style: "1",
+          locale: "en",
+          enable_publishing: false,
+          withdateranges: true,
+          hide_side_toolbar: false,
+          hide_top_toolbar: false,
+          save_image: false,
+          show_volume: false,
+          hide_legend: false,
+          container_id: containerId,
+          // The 'studies' array can be used to add indicators by default
+          studies: [],
+          // These features can be adjusted to show/hide UI elements
+          disabled_features: ["use_localstorage_for_settings"],
+          enabled_features: ["study_templates"],
+          // onChartReady is the correct callback to use
+          onChartReady: function() {
+            const widget = widgetRef.current;
+            if (widget && onSymbolChange) {
+              widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+                if (newSymbol.ticker && newSymbol.ticker !== symbol) {
+                  onSymbolChange(newSymbol.ticker);
+                }
+              });
+            }
           },
         };
 
+        // Create the widget
         const widget = new (window as any).TradingView.widget(widgetOptions);
         widgetRef.current = widget;
+
       }
     };
     
-    // If widget already exists, just update the symbol
-    if (widgetRef.current && widgetRef.current.setSymbol) {
-      widgetRef.current.setSymbol(symbol, interval, () => {
-        console.log(`Symbol set to ${symbol} on widget ${containerId}`);
-      });
-      return;
-    }
-
+    // If the widget script is already loaded, create the widget
     if (document.getElementById('tradingview-widget-script-advanced')) {
-      createWidget();
+      // If widget already exists, just update the symbol
+      if (widgetRef.current && widgetRef.current.setSymbol) {
+        widgetRef.current.setSymbol(symbol, interval, () => {});
+      } else {
+        createWidget();
+      }
     } else {
+      // Otherwise, load the script and then create the widget
       const script = document.createElement("script");
       script.id = 'tradingview-widget-script-advanced';
       script.src = "https://s3.tradingview.com/tv.js";
@@ -88,10 +81,10 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
       if (widgetRef.current) {
         try {
           widgetRef.current.remove();
+          widgetRef.current = null;
         } catch (error) {
           console.error('Error removing widget on cleanup:', error);
         }
-        widgetRef.current = null;
       }
     };
   }, [symbol, interval, containerId, onSymbolChange]);
