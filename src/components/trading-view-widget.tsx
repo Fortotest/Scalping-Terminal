@@ -12,10 +12,11 @@ interface TradingViewWidgetProps {
 function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<any>(null);
+  const isWidgetCreated = useRef(false);
 
   useEffect(() => {
     const createWidget = () => {
-      if (!container.current || widgetRef.current || typeof (window as any).TradingView === 'undefined') {
+      if (!container.current || isWidgetCreated.current || typeof (window as any).TradingView === 'undefined') {
         return;
       }
       
@@ -37,7 +38,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
         hide_top_toolbar: false,
         save_image: false,
         container_id: containerId,
-        studies: [], // Ensure no default studies are loaded
+        studies: [], // No default studies
         overrides: {
             "paneProperties.legendProperties.showLegend": true,
             "paneProperties.legendProperties.showStudyArguments": true,
@@ -46,8 +47,8 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             "paneProperties.legendProperties.showSeriesTitle": true,
             "paneProperties.legendProperties.showSeriesOHLC": true,
             "mainSeriesProperties.style": 1,
-            "mainSeriesProperties.showPriceLine": false, // From previous request
-            "volumePaneSize": "tiny", // Hide volume pane
+            "mainSeriesProperties.showPriceLine": false,
+            "volumePaneSize": "tiny", // Hides the volume pane
         },
         onChartReady: () => {
             const widget = widgetRef.current;
@@ -63,6 +64,7 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
 
       const widget = new (window as any).TradingView.widget(widgetOptions);
       widgetRef.current = widget;
+      isWidgetCreated.current = true;
     };
 
     const initialize = () => {
@@ -70,7 +72,8 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
             createWidget();
         } else {
             const scriptId = 'tradingview-widget-script-advanced';
-            if (!document.getElementById(scriptId)) {
+            const existingScript = document.getElementById(scriptId);
+            if (!existingScript) {
                 const script = document.createElement("script");
                 script.id = scriptId;
                 script.src = "https://s3.tradingview.com/tv.js";
@@ -85,16 +88,27 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
     initialize();
 
     return () => {
-      if (widgetRef.current && widgetRef.current.remove) {
+      if (widgetRef.current && typeof widgetRef.current.remove === 'function') {
         try {
           widgetRef.current.remove();
         } catch(e) {
           console.error("Error removing widget:", e);
         }
         widgetRef.current = null;
+        isWidgetCreated.current = false;
       }
     };
-  }, [symbol, interval, containerId, onSymbolChange]);
+  }, [containerId]); // Removed dependencies to avoid re-creating widget on symbol change
+
+  // Effect to handle symbol change on an existing widget
+  useEffect(() => {
+    if (widgetRef.current && widgetRef.current.setSymbol) {
+      widgetRef.current.setSymbol(symbol, interval, () => {
+        // console.log('Symbol changed to', symbol);
+      });
+    }
+  }, [symbol, interval]);
+
 
   return (
     <div className="tradingview-widget-container h-full w-full">
