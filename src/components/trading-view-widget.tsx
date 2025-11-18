@@ -6,10 +6,12 @@ interface TradingViewWidgetProps {
   symbol: string;
   interval: string;
   containerId: string;
+  onSymbolChange?: (symbol: string) => void;
 }
 
-function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetProps) {
+function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: TradingViewWidgetProps) {
   const container = useRef<HTMLDivElement>(null);
+  const isMounted = useRef(false);
 
   useEffect(() => {
     // Ensure this runs only on the client
@@ -17,14 +19,21 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       return;
     }
 
+    if (isMounted.current) {
+        // If widget already exists, just update the symbol
+        const widget = (window as any).TradingView.widgets[containerId];
+        if (widget && widget.setSymbol) {
+            widget.setSymbol(symbol, interval, () => {
+                console.log(`Symbol set to ${symbol} on widget ${containerId}`);
+            });
+            return;
+        }
+    }
+
     // Clean up previous widget if symbol or interval changes
     container.current.innerHTML = '';
 
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
-    script.type = "text/javascript";
-    script.async = true;
-    script.innerHTML = JSON.stringify({
+    const widgetOptions = {
       "autosize": true,
       "symbol": symbol,
       "interval": interval,
@@ -33,23 +42,52 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "style": "1",
       "locale": "en",
       "enable_publishing": false,
-      "hide_top_toolbar": false,
+      "withdateranges": true,
       "hide_side_toolbar": false,
+      "hide_top_toolbar": false,
       "hide_legend": true,
-      "studies": [],
+      "show_volume": false,
       "container_id": containerId,
-      "show_volume": false
-    });
-    
-    container.current.appendChild(script);
+      "studies": [],
+      "disabled_features": ["use_localstorage_for_settings"],
+      "enabled_features": ["study_templates"]
+    };
 
-    return () => {
-      // Cleanup on component unmount
-      if (container.current) {
-        container.current.innerHTML = '';
+    const createWidget = () => {
+      if ('TradingView' in window && (window.TradingView as any).widget) {
+        const widget = new (window as any).TradingView.widget(widgetOptions);
+        
+        // Store widget instance for symbol updates
+        if (!(window as any).TradingView.widgets) {
+          (window as any).TradingView.widgets = {};
+        }
+        (window as any).TradingView.widgets[containerId] = widget;
+
+        widget.onChartReady(() => {
+          widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+              if (onSymbolChange && newSymbol.ticker) {
+                  onSymbolChange(newSymbol.ticker);
+              }
+          });
+        });
+        isMounted.current = true;
       }
     };
-  }, [symbol, interval, containerId]);
+
+    if (document.getElementById('tradingview-widget-script-advanced')) {
+        createWidget();
+    } else {
+        const script = document.createElement("script");
+        script.id = 'tradingview-widget-script-advanced';
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.type = "text/javascript";
+        script.async = true;
+        script.onload = createWidget;
+        document.head.appendChild(script);
+    }
+    
+    // No cleanup function needed as we are now updating the widget instance
+  }, [symbol, interval, containerId, onSymbolChange]);
 
   return (
     <div 

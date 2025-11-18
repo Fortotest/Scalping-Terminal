@@ -4,9 +4,10 @@ import TradingViewWidget from './trading-view-widget';
 
 interface Props {
   symbol: string;
+  onSymbolChange: (symbol: string) => void;
 }
 
-export default function MultiChartGrid({ symbol }: Props) {
+export default function MultiChartGrid({ symbol, onSymbolChange }: Props) {
   const charts = [
     { id: 'chart-h4', interval: '240' },
     { id: 'chart-h1', interval: '60' },
@@ -22,6 +23,7 @@ export default function MultiChartGrid({ symbol }: Props) {
             symbol={symbol}
             interval={chart.interval}
             containerId={chart.id}
+            onSymbolChange={onSymbolChange}
           />
       ))}
     </div>
