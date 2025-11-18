@@ -36,11 +36,6 @@ function TradingViewWidget({ symbol, interval, containerId }: TradingViewWidgetP
       "hide_top_toolbar": false,
       "hide_side_toolbar": false,
       "hide_legend": true,
-      "hide_volume": true,
-      "hideideas": true,
-      "studies_overrides": {
-        "volume.volume.plottype": "line"
-      },
       "studies": [],
       "container_id": containerId,
     });
