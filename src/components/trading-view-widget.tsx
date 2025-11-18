@@ -34,18 +34,19 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
           save_image: false,
           container_id: containerId,
           show_volume: false,
+          onChartReady: () => {
+            if (widgetRef.current) {
+              widgetRef.current.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
+                  if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
+                      onSymbolChange(newSymbol.ticker);
+                  }
+              });
+            }
+          },
         };
 
         const widget = new (window as any).TradingView.widget(widgetOptions);
         widgetRef.current = widget;
-        
-        widget.onChartReady(() => {
-          widget.subscribe('symbol_change', (newSymbol: { ticker: string }) => {
-              if (onSymbolChange && newSymbol.ticker && newSymbol.ticker !== symbol) {
-                  onSymbolChange(newSymbol.ticker);
-              }
-          });
-        });
       }
     };
     
@@ -76,18 +77,16 @@ function TradingViewWidget({ symbol, interval, containerId, onSymbolChange }: Tr
       script.src = "https://s3.tradingview.com/tv.js";
       script.type = "text/javascript";
       script.async = true;
-      script.onload = initialize; // Initialize after script loads
+      script.onload = initialize;
       document.head.appendChild(script);
     }
     
-    // Cleanup function when component unmounts or dependencies change
     return () => {
       if (widgetRef.current && typeof widgetRef.current.remove === 'function') {
         try {
           widgetRef.current.remove();
           widgetRef.current = null;
         } catch (error) {
-          // It's possible the widget is already gone if the page is navigating away
           console.error('Error removing widget on cleanup:', error);
         }
       }
